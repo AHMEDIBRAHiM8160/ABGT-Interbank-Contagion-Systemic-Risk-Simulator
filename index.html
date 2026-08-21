@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ABGT Interbank Contagion &amp; Systemic Risk Simulator</title>
+<meta name="description" content="Simulate interbank contagion and measure systemic risk with the Eisenberg-Noe, Rogers-Veraart and Kusnetsov-Veraart clearing models." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">ABGT</div>
+      <div class="brand-text">
+        <strong>Contagion Simulator</strong>
+        <span>Systemic Risk Lab</span>
+      </div>
+    </div>
+    <nav class="nav" role="navigation" aria-label="Main">
+      <button class="nav-item is-active" data-view="dashboard"><i data-ic="grid"></i>Dashboard</button>
+      <button class="nav-item" data-view="upload"><i data-ic="upload"></i>Data Upload</button>
+      <button class="nav-item" data-view="network"><i data-ic="share"></i>Network</button>
+      <button class="nav-item" data-view="simulation"><i data-ic="play"></i>Simulation</button>
+      <button class="nav-item" data-view="comparison"><i data-ic="bars"></i>Model Comparison</button>
+      <button class="nav-item" data-view="risk"><i data-ic="alert"></i>Risk Analysis</button>
+      <button class="nav-item" data-view="results"><i data-ic="table"></i>Results</button>
+      <button class="nav-item" data-view="export"><i data-ic="download"></i>Export Report</button>
+      <button class="nav-item" data-view="about"><i data-ic="book"></i>About Research</button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="pill" id="statusPill">No dataset loaded</div>
+      <p class="muted xs">Powered by <strong>ABGT Solutions</strong></p>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-btn only-mobile" id="menuBtn" aria-label="Toggle navigation">☰</button>
+      <div class="topbar-title">
+        <h1 id="viewTitle">Dashboard</h1>
+        <p id="viewSub">Interbank contagion and systemic-risk analytics</p>
+      </div>
+      <div class="topbar-actions">
+        <span class="badge badge-model" id="activeModelBadge">No run yet</span>
+        <button class="icon-btn" id="themeBtn" aria-label="Toggle colour theme" title="Toggle light / dark">◐</button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ---------- DASHBOARD ---------- -->
+      <section class="view is-active" id="view-dashboard">
+        <div class="hero">
+          <div>
+            <p class="eyebrow">ABGT Solutions · Research Instrument</p>
+            <h2>Interbank Contagion &amp; Systemic Risk Simulator</h2>
+            <p class="lede">A clearing-network engine implementing the <strong>Eisenberg–Noe</strong>, <strong>Rogers–Veraart</strong> and <strong>Kusnetsov–Veraart</strong> models exactly as formulated in the undergraduate research
+              <em>“Mathematical Modelling and Risk Management in Financial Networks”</em> (Ahmed Ibrahim, U1/21/MTH/1420).</p>
+            <div class="hero-actions">
+              <button class="btn btn-primary" data-goto="upload">Upload a dataset</button>
+              <button class="btn btn-ghost" id="loadExampleBtn">Load the research example (3 banks)</button>
+            </div>
+          </div>
+          <div class="hero-eq">
+            <span class="eq-label">Clearing fixed point</span>
+            <code>p = min{ p̄ , αe + βΠᵀp }</code>
+            <span class="eq-label">Fire-sale feedback</span>
+            <code>e′ᵢ = eᵢ − λᵢ(p̄ᵢ − pᵢ)⁺</code>
+            <span class="eq-label">Systemic risk index</span>
+            <code>SR = Σᵢ (p̄ᵢ − pᵢ)⁺</code>
+          </div>
+        </div>
+
+        <div class="cards" id="kpiCards">
+          <div class="card kpi"><span class="kpi-label">Institutions</span><span class="kpi-value" id="kpiBanks">—</span><span class="kpi-note">nodes in V</span></div>
+          <div class="card kpi"><span class="kpi-label">Total obligations</span><span class="kpi-value" id="kpiLiab">—</span><span class="kpi-note">Σ p̄ᵢ</span></div>
+          <div class="card kpi"><span class="kpi-label">Defaults</span><span class="kpi-value danger" id="kpiDefaults">—</span><span class="kpi-note">pᵢ &lt; p̄ᵢ</span></div>
+          <div class="card kpi"><span class="kpi-label">Systemic risk SR</span><span class="kpi-value warn" id="kpiSR">—</span><span class="kpi-note">Σ (p̄ᵢ − pᵢ)⁺</span></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><h3>Contagion path</h3><span class="hint" data-tip="Unpaid obligations SR at each iteration k of the clearing fixed point. Falling curves show the cascade settling.">?</span></div>
+            <div class="chart-box"><canvas id="chartPath"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Liability heatmap Lᵢⱼ</h3><span class="hint" data-tip="Row i owes column j. Darker cells are larger exposures.">?</span></div>
+            <div class="scroll-x" id="heatmapBox"><p class="empty">Load a dataset to view the liability matrix.</p></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Workflow</h3></div>
+          <ol class="steps">
+            <li><strong>Upload</strong> a CSV, Excel or PDF containing the interbank liability matrix and external assets.</li>
+            <li><strong>Validate</strong> — review warnings; data is never silently modified.</li>
+            <li><strong>Configure shock</strong> — choose the initially distressed institutions and the shock magnitude.</li>
+            <li><strong>Select model</strong> — EN, RV, KV, or compare all three.</li>
+            <li><strong>Run</strong> the fixed-point clearing engine and read the systemic-risk output.</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- ---------- UPLOAD ---------- -->
+      <section class="view" id="view-upload">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><h3>1. Upload interbank dataset</h3></div>
+            <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload dataset">
+              <div class="dz-icon">⬆</div>
+              <p><strong>Drop a file here</strong> or click to browse</p>
+              <p class="muted xs">CSV · XLSX · XLS · PDF (table extraction)</p>
+              <input type="file" id="fileInput" accept=".csv,.txt,.xlsx,.xls,.pdf" hidden />
+            </div>
+            <div class="row-btns">
+              <button class="btn btn-ghost" id="sampleCsvBtn">Download sample CSV</button>
+              <button class="btn btn-ghost" id="loadExampleBtn2">Load research example</button>
+            </div>
+            <div id="uploadStatus"></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Required dataset format</h3></div>
+            <p class="muted sm">Wide matrix layout — first column is the bank name, one column per bank holding <code>Lᵢⱼ</code> (row <em>i</em> owes column <em>j</em>), plus an <code>ExternalAssets</code> column. Optional: <code>ExternalLiabilities</code>, <code>Lambda</code>.</p>
+            <pre class="code-sample">Bank,Bank A,Bank B,Bank C,ExternalAssets
+Bank A,0,10,20,50
+Bank B,5,0,10,40
+Bank C,15,5,0,30</pre>
+            <p class="muted sm">An edge list with columns <code>Debtor, Creditor, Amount, ExternalAssets</code> is also accepted.</p>
+          </div>
+        </div>
+
+        <div class="card" id="previewCard" hidden>
+          <div class="card-head">
+            <h3>2. Data preview &amp; validation</h3>
+            <span class="badge" id="sourceBadge"></span>
+          </div>
+          <div id="validationList"></div>
+          <div id="pdfConfirm" class="notice notice-warn" hidden>
+            <strong>PDF extraction — confirmation required.</strong>
+            Values below were extracted heuristically from the PDF. Verify and correct every cell before running the simulation. Cells are editable.
+          </div>
+          <div class="scroll-x" id="previewTable"></div>
+          <div class="row-btns">
+            <button class="btn btn-primary" id="confirmDataBtn">Confirm data &amp; build network</button>
+            <button class="btn btn-ghost" id="clearDataBtn">Discard</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- NETWORK ---------- -->
+      <section class="view" id="view-network">
+        <div class="card">
+          <div class="card-head">
+            <h3>Interbank network</h3>
+            <div class="legend">
+              <span><i class="dot dot-solvent"></i>Solvent</span>
+              <span><i class="dot dot-default"></i>Default</span>
+              <span><i class="dot dot-shock"></i>Initial shock</span>
+            </div>
+          </div>
+          <div class="net-controls">
+            <label class="ctl">Contagion round
+              <input type="range" id="stageSlider" min="0" max="0" value="0" step="1" />
+              <output id="stageOut">final</output>
+            </label>
+            <button class="btn btn-ghost sm" id="animateBtn">▶ Animate propagation</button>
+            <button class="btn btn-ghost sm" id="resetStageBtn">Show final state</button>
+          </div>
+          <div id="networkCanvas" class="network-canvas"><p class="empty">Load a dataset to render the network.</p></div>
+        </div>
+        <div class="card" id="nodeInspector" hidden>
+          <div class="card-head"><h3 id="inspectTitle">Institution</h3></div>
+          <div id="inspectBody"></div>
+        </div>
+      </section>
+
+      <!-- ---------- SIMULATION ---------- -->
+      <section class="view" id="view-simulation">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-head"><h3>3. Configure initial shock</h3><span class="hint" data-tip="The research PDF does not define a formal shock operator, so the shock acts on the external-asset vector e — an implementation assumption, clearly labelled.">?</span></div>
+            <label class="field">Shock type
+              <select id="shockType">
+                <option value="asset">Proportional external-asset loss</option>
+                <option value="wipeout">Total external-asset wipe-out</option>
+                <option value="none">No shock (baseline clearing)</option>
+              </select>
+            </label>
+            <label class="field">Shock magnitude <output id="shockOut">60%</output>
+              <input type="range" id="shockMag" min="0" max="100" value="60" step="5" />
+            </label>
+            <div class="field">Initially distressed institutions
+              <div class="chip-list" id="shockBanks"><span class="muted sm">Load a dataset first.</span></div>
+            </div>
+            <p class="note-impl">Implementation assumption — not an equation from the research.</p>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h3>4. Model &amp; parameters</h3></div>
+            <div class="field">Model
+              <div class="seg" id="modelSeg">
+                <button class="seg-btn is-active" data-model="EN">Eisenberg–Noe</button>
+                <button class="seg-btn" data-model="RV">Rogers–Veraart</button>
+                <button class="seg-btn" data-model="KV">Kusnetsov–Veraart</button>
+                <button class="seg-btn" data-model="ALL">Compare all</button>
+              </div>
+            </div>
+            <label class="field">α — accessible fraction of external assets <output id="alphaOut">0.70</output>
+              <input type="range" id="alphaIn" min="0.05" max="1" step="0.01" value="0.7" />
+            </label>
+            <label class="field">β — recoverable fraction of interbank receipts <output id="betaOut">0.90</output>
+              <input type="range" id="betaIn" min="0.05" max="1" step="0.01" value="0.9" />
+            </label>
+            <label class="field">λ — liquidation rate (fire-sale, KV) <output id="lambdaOut">0.20</output>
+              <input type="range" id="lambdaIn" min="0" max="2" step="0.05" value="0.2" />
+            </label>
+            <label class="check"><input type="checkbox" id="kvBeta" /> Apply β inside the KV coupled system (PDF Sec. 3.6 omits β)</label>
+            <button class="btn btn-primary block" id="runBtn" disabled>Run simulation</button>
+            <div id="runStatus"></div>
+          </div>
+        </div>
+
+        <div class="card" id="simResultCard" hidden>
+          <div class="card-head"><h3>Simulation output</h3><span class="badge" id="simModelBadge"></span></div>
+          <div class="cards" id="simKpis"></div>
+          <div class="grid-2">
+            <div><h4 class="sub">Bank-level clearing vs shortfall</h4><div class="chart-box"><canvas id="chartBankLoss"></canvas></div></div>
+            <div><h4 class="sub">Default sequence</h4><div id="seqBox"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- COMPARISON ---------- -->
+      <section class="view" id="view-comparison">
+        <div class="card" id="cmpEmpty"><p class="empty">Run “Compare all” in the Simulation panel to populate this section.</p></div>
+        <div id="cmpWrap" hidden>
+          <div class="grid-2">
+            <div class="card"><div class="card-head"><h3>Total defaults</h3></div><div class="chart-box"><canvas id="chartCmpDefaults"></canvas></div></div>
+            <div class="card"><div class="card-head"><h3>Systemic risk SR</h3></div><div class="chart-box"><canvas id="chartCmpSR"></canvas></div></div>
+          </div>
+          <div class="grid-2">
+            <div class="card"><div class="card-head"><h3>Bank-level shortfalls by model</h3></div><div class="chart-box"><canvas id="chartCmpBank"></canvas></div></div>
+            <div class="card"><div class="card-head"><h3>Normalised model profile</h3><span class="hint" data-tip="Each axis is scaled to the largest value across the three models.">?</span></div><div class="chart-box"><canvas id="chartRadar"></canvas></div></div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>Side-by-side comparison</h3></div>
+            <div class="scroll-x" id="cmpTable"></div>
+            <div id="cmpNarrative" class="notice"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- RISK ---------- -->
+      <section class="view" id="view-risk">
+        <div class="card" id="riskEmpty"><p class="empty">Run a simulation to populate the risk analysis.</p></div>
+        <div id="riskWrap" hidden>
+          <div class="card">
+            <div class="card-head"><h3>Bank-level systemic risk analysis</h3>
+              <span class="hint" data-tip="Shortfall and contagion contribution come from the research equation SR = Σ(p̄−p)⁺. Marginal impact ΔSR and the composite score are application-level analytical indicators.">?</span></div>
+            <div class="table-tools">
+              <input type="search" id="riskSearch" placeholder="Search institution…" aria-label="Search institutions" />
+              <select id="riskFilter" aria-label="Filter"><option value="all">All institutions</option><option value="default">Defaulted only</option><option value="solvent">Solvent only</option></select>
+            </div>
+            <div class="scroll-x" id="riskTable"></div>
+            <p class="note-impl">“Risk score” is an application-level analytical indicator (0.65 × normalised ΔSR + 0.35 × normalised gross exposure). It is <em>not</em> an equation from the research.</p>
+          </div>
+          <div class="grid-2">
+            <div class="card"><div class="card-head"><h3>Exposure vs marginal systemic impact</h3></div><div class="chart-box"><canvas id="chartScatter"></canvas></div></div>
+            <div class="card"><div class="card-head"><h3>Risk distribution</h3></div><div id="riskBars"></div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- RESULTS ---------- -->
+      <section class="view" id="view-results">
+        <div class="card" id="resEmpty"><p class="empty">No results yet.</p></div>
+        <div id="resWrap" hidden>
+          <div class="card"><div class="card-head"><h3>System summary</h3></div><div class="scroll-x" id="sumTable"></div></div>
+          <div class="card">
+            <div class="card-head"><h3>Bank results</h3></div>
+            <div class="table-tools">
+              <input type="search" id="resSearch" placeholder="Search…" aria-label="Search results" />
+              <label class="check sm"><input type="checkbox" id="resPaginate" checked /> Paginate</label>
+            </div>
+            <div class="scroll-x" id="resTable"></div>
+            <div class="pager" id="resPager"></div>
+          </div>
+          <div class="card" id="kvRoundsCard" hidden>
+            <div class="card-head"><h3>Kusnetsov–Veraart time steps</h3><span class="hint" data-tip="Each row is one iteration of the coupled system in PDF Sec. 3.6.">?</span></div>
+            <div class="scroll-x" id="kvTable"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ---------- EXPORT ---------- -->
+      <section class="view" id="view-export">
+        <div class="card">
+          <div class="card-head"><h3>Export simulation report</h3></div>
+          <p class="muted sm">Exports contain the input network, the model and parameters, the equations applied, the system summary, bank-level results, model comparison, charts and the network diagram.</p>
+          <div class="row-btns">
+            <button class="btn btn-primary" id="expCsv">Export CSV</button>
+            <button class="btn btn-primary" id="expXlsx">Export Excel</button>
+            <button class="btn btn-primary" id="expPdf">Export PDF report</button>
+            <button class="btn btn-ghost" id="expPrint">Print</button>
+          </div>
+          <div id="expStatus"></div>
+        </div>
+        <div class="card">
+          <div class="card-head"><h3>Verification suite</h3><span class="hint" data-tip="Runs the engine against hand-checkable cases including the numerical example in Chapter 4 of the research.">?</span></div>
+          <p class="muted sm">Reproduces the Chapter 4 three-bank example and additional analytical edge cases, comparing engine output against values computed by hand.</p>
+          <button class="btn btn-ghost" id="runTestsBtn">Run mathematical verification</button>
+          <div id="testOut"></div>
+        </div>
+      </section>
+
+      <!-- ---------- ABOUT ---------- -->
+      <section class="view" id="view-about">
+        <div class="card">
+          <div class="card-head"><h3>Research background</h3></div>
+          <h2 class="research-title">Mathematical Modelling and Risk Management in Financial Networks</h2>
+          <p class="muted sm">Ahmed Ibrahim · U1/21/MTH/1420 · B.Sc. (Hons.) Mathematics · Department of Mathematics, Umaru Musa Yar'adua University, Katsina State, Nigeria · January 2026</p>
+          <p>This application was developed from that undergraduate research on systemic risk, interbank contagion and financial networks. Every clearing equation implemented in the engine is taken verbatim from Chapter Three of the project; the Chapter Four numerical example is reproduced as a built-in test case.</p>
+
+          <h4 class="sub">Aim</h4>
+          <p class="sm">To develop and analyse a purely mathematical framework, based on the Eisenberg–Noe, Rogers–Veraart and Kusnetsov–Veraart models, for examining contagion dynamics and systemic risk in financial networks.</p>
+          <h4 class="sub">Objectives</h4>
+          <ol class="sm ol">
+            <li>Formulate a rigorous mathematical representation of contagion dynamics in financial networks.</li>
+            <li>Analyse the effects of interbank exposures and capital buffers on default propagation.</li>
+            <li>Study equilibrium clearing payments using fixed-point and comparative static analysis.</li>
+            <li>Examine how liquidity losses and fire-sale mechanisms amplify financial distress.</li>
+            <li>Evaluate the effectiveness of capital buffers and exposure constraints in mitigating systemic risk.</li>
+          </ol>
+          <h4 class="sub">Statement of the problem</h4>
+          <p class="sm">Traditional risk models treat institutions in isolation and fail to capture risk propagation from network interdependencies; network models often simplify liquidity constraints, default costs and market feedback. The study addresses this through the fixed point <code>P = min{L1, e + LᵀP}</code>.</p>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Mathematical specification implemented</h3></div>
+          <div class="eq-grid" id="eqGrid"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Assumptions stated in the research</h3></div>
+          <ul class="sm ul">
+            <li>Interbank obligations are fixed and known at the initial time.</li>
+            <li>Institutions do not engage in strategic default.</li>
+            <li>The system is analysed over a single settlement period.</li>
+            <li>All model parameters are deterministic.</li>
+            <li>Limited liability — institutions cannot pay more than their available assets.</li>
+            <li>Proportional repayment — creditors are paid proportionally in default.</li>
+          </ul>
+          <h4 class="sub">Scope limitations stated in the research</h4>
+          <p class="sm">The analysis is theoretical, uses stylised networks and simulated scenarios rather than real-time data, and the Kusnetsov–Veraart specification is a reduced form that links asset depletion to payment shortfalls <em>without</em> explicit price-impact functions.</p>
+        </div>
+
+        <div class="card notice notice-warn">
+          <h4 class="sub">Points where the research text is unclear — flagged, not silently patched</h4>
+          <ul class="sm ul">
+            <li><strong>Chapter 4 Rogers–Veraart figures.</strong> With the Chapter 4 data (e = 50, 40, 30) and α = 0.7, β = 0.9, the equation <code>p = min{p̄, αe + βΠᵀp}</code> yields <code>p* = (30, 15, 20)</code> — no default — because αe₁ = 35 already exceeds p̄₁ = 30. The reported <code>p* = (25.4, 13.2, 17.6)</code> therefore cannot be reproduced from that equation with an unshocked asset vector. The engine computes the equation as written and does not hard-code the reported figures. Applying an initial shock to <code>e</code> does produce partial defaults, consistent with the chapter's interpretation.</li>
+            <li><strong>Fire-sale figures are consistent.</strong> Given p* = (25.4, 13.2, 17.6) and λ = 0.2, the equation <code>e′ᵢ = eᵢ − λᵢ(p̄ᵢ − pᵢ)⁺</code> reproduces the reported e′ = (49.1, 39.6, 29.5) exactly. This is a passing test in the verification suite.</li>
+            <li><strong>No shock operator is defined</strong> in the research; the shock mechanisms in this tool are labelled implementation assumptions.</li>
+            <li><strong>β in the coupled system.</strong> Sec. 3.6 writes <code>Πᵀp</code> without β while Sec. 3.4 includes it. Both variants are selectable in the Simulation panel.</li>
+            <li><strong>External liabilities</strong> do not appear in the research clearing equations; when supplied they are reported but excluded from the fixed point.</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>Research supervisors &amp; mentors</h3></div>
+          <p class="muted sm">Supervisor recorded on the project title page. Additional mentor cards are ready for details you provide — nothing has been invented.</p>
+          <div class="people">
+            <article class="person">
+              <div class="avatar">BB</div>
+              <h4>Dr. Babangida Bature</h4>
+              <p class="role">Project Supervisor</p>
+              <p class="inst">Department of Mathematics, Umaru Musa Yar'adua University</p>
+              <p class="muted xs">Supervised “Mathematical Modelling and Risk Management in Financial Networks”.</p>
+            </article>
+            <article class="person person--placeholder">
+              <div class="avatar">MI</div>
+              <h4>Dr. Mu'awiya Idriss</h4>
+              <p class="role">HOD Statistics</p>
+              <p class="inst">Department of Statistics, Umaru Musa Yar'adua University</p>
+              <p class="muted xs">Mentorship</p>
+            </article>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head"><h3>About ABGT Solutions</h3></div>
+          <p class="sm">This instrument is built and owned by <strong>ABGT Solutions</strong>, the technology brand of Ahmed Ibrahim. Product name: <strong>ABGT Interbank Contagion &amp; Systemic Risk Simulator</strong>.</p>
+          <p class="muted xs">Alternative names considered: ABGT Systemic Risk Simulator · ABGT Financial Network Risk Lab · ABGT Clearing &amp; Contagion Engine.</p>
+        </div>
+      </section>
+    </div>
+
+    <footer class="footer">
+      <span>ABGT Interbank Contagion &amp; Systemic Risk Simulator</span>
+      <span>Built from the undergraduate research of Ahmed Ibrahim (U1/21/MTH/1420), UMYU Katsina</span>
+      <span><strong>Powered by ABGT Solutions</strong></span>
+    </footer>
+  </main>
+</div>
+
+<div class="toast-wrap" id="toasts" aria-live="polite"></div>
+<div class="overlay" id="overlay" hidden><div class="spinner"></div><p id="overlayMsg">Working…</p></div>
+
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+<script>if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";</script>
+
+<script src="js/models.js"></script>
+<script src="js/networkBuilder.js"></script>
+<script src="js/contagionEngine.js"></script>
+<script src="js/riskAnalyzer.js"></script>
+<script src="js/dataLoader.js"></script>
+<script src="js/dataValidator.js"></script>
+<script src="js/networkVisualizer.js"></script>
+<script src="js/chartManager.js"></script>
+<script src="js/exportManager.js"></script>
+<script src="js/tests.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
