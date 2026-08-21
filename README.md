@@ -28,12 +28,12 @@ vector `p`, and the liquidation rate `λ`.
 
 ## 2. Research background
 
-- **Aim** — develop and analyse a purely mathematical framework, based on Eisenberg–Noe,
+- **Aim** - develop and analyse a purely mathematical framework, based on Eisenberg–Noe,
   Rogers–Veraart and Kusnetsov–Veraart, for examining contagion dynamics and systemic
   risk in financial networks.
-- **Problem** — traditional models treat institutions in isolation and miss risk
+- **Problem** - traditional models treat institutions in isolation and miss risk
   propagation through network interdependencies.
-- **Method** — graph theory, matrix analysis and fixed-point theory over a single
+- **Method** - graph theory, matrix analysis and fixed-point theory over a single
   settlement period with deterministic parameters.
 
 Research assumptions implemented (PDF Sec. 3.3.1): fixed and known obligations; no
@@ -59,7 +59,7 @@ All equations are taken verbatim from Chapter Three of the research.
 
 **Solution method.** The clearing map `Φ(p) = min{p̄, αe + βΠᵀp}` is monotone and maps
 `[0, p̄]` into itself. Starting from `p⁽⁰⁾ = p̄`, the Picard sequence `p⁽ᵏ⁺¹⁾ = Φ(p⁽ᵏ⁾)`
-is non-increasing and bounded below, so it converges to the greatest fixed point — the
+is non-increasing and bounded below, so it converges to the greatest fixed point - the
 economically relevant clearing vector. Convergence is enforced by an epsilon tolerance
 (1e-10) and a hard iteration cap (500), so the algorithm always terminates.
 
@@ -68,8 +68,8 @@ economically relevant clearing vector. Convergence is enforced by an epsilon tol
 The research does not define a shock operator, so the tool offers two, both acting only
 on the external-asset vector `e`:
 
-- `eᵢ → (1 − s)·eᵢ` — proportional external-asset loss
-- `eᵢ → 0` — total wipe-out
+- `eᵢ → (1 − s)·eᵢ` - proportional external-asset loss
+- `eᵢ → 0` - total wipe-out
 
 Other implementation choices: external assets are floored at 0; `β` inside the coupled
 KV system is user-selectable because Sec. 3.6 omits it while Sec. 3.4 includes it;
@@ -79,7 +79,7 @@ because the research equations do not contain them.
 ### Documented inconsistency in the source research
 
 With the Chapter 4 data (`e = (50, 40, 30)`, `α = 0.7`) the literal Rogers–Veraart
-equation gives `p* = (30, 15, 20)` — no default — because `αe₁ = 35 > p̄₁ = 30`. The
+equation gives `p* = (30, 15, 20)` - no default - because `αe₁ = 35 > p̄₁ = 30`. The
 reported `p* = (25.4, 13.2, 17.6)` cannot be reproduced from that equation on an
 unshocked asset vector. The engine computes the equation as written and flags the
 discrepancy in **About Research → points where the research text is unclear**; it does
@@ -128,9 +128,9 @@ and are **always** shown for confirmation and manual correction before simulatio
 
 Provided samples in `sample-data/`:
 
-- `research-example-3-banks.csv` — the Chapter 4 example
-- `interbank-8-banks.csv` — a larger stylised network
-- `edge-list-example.csv` — the edge-list layout
+- `research-example-3-banks.csv` - the Chapter 4 example
+- `interbank-8-banks.csv` - a larger stylised network
+- `edge-list-example.csv` - the edge-list layout
 
 ---
 
@@ -154,13 +154,13 @@ Provided samples in `sample-data/`:
 ## 7. How to interpret results
 
 - **pᵢ** — what bank *i* actually pays at clearing. `pᵢ = p̄ᵢ` means full settlement.
-- **Shortfall `(p̄ᵢ − pᵢ)⁺`** — bank *i*'s contribution to the systemic-risk index.
+- **Shortfall `(p̄ᵢ − pᵢ)⁺`** - bank *i*'s contribution to the systemic-risk index.
 - **SR** — total unpaid obligations across the system; the research distress indicator.
-- **Recovery rate `pᵢ / p̄ᵢ`** — the fraction creditors receive (also shown inside the
+- **Recovery rate `pᵢ / p̄ᵢ`** - the fraction creditors receive (also shown inside the
   network nodes).
-- **Contagion stage** — 0 means the bank failed on its own fundamentals; higher stages
+- **Contagion stage** - 0 means the bank failed on its own fundamentals; higher stages
   mean it failed because counterparties failed first.
-- **Marginal ΔSR** and **Risk score** — *application-level analytical indicators*,
+- **Marginal ΔSR** and **Risk score** - *application-level analytical indicators*,
   not equations from the research. The risk score is
   `100 × (0.65 × normalised ΔSR + 0.35 × normalised gross exposure)`.
 
@@ -171,7 +171,7 @@ Provided samples in `sample-data/`:
 **Export Report** provides CSV, Excel (multi-sheet: Summary, Bank Results, Model
 Comparison, Input Network), a multi-page PDF report (configuration, equations applied,
 system summary, bank-level table, model comparison, network diagram and every chart),
-and Print. The same panel runs the **mathematical verification suite** — 17 checks
+and Print. The same panel runs the **mathematical verification suite** - 17 checks
 including the Chapter 4 numerical example and analytic edge cases.
 
 ---
