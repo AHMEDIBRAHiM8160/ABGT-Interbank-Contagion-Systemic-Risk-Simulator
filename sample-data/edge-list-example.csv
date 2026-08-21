@@ -1,0 +1,7 @@
+Debtor,Creditor,Amount,ExternalAssets
+Bank A,Bank B,10,50
+Bank A,Bank C,20,50
+Bank B,Bank A,5,40
+Bank B,Bank C,10,40
+Bank C,Bank A,15,30
+Bank C,Bank B,5,30

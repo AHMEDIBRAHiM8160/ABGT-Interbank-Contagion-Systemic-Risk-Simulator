@@ -1,0 +1,9 @@
+Bank,Alpha Bank,Beta Trust,Cedar Bank,Delta Union,Echo Finance,Falcon Bank,Gamma Credit,Horizon Bank,ExternalAssets,ExternalLiabilities
+Alpha Bank,0,120,80,0,40,0,60,20,210,50
+Beta Trust,90,0,0,110,0,55,0,30,175,40
+Cedar Bank,45,70,0,0,95,0,25,0,140,35
+Delta Union,0,60,130,0,0,85,0,40,190,60
+Echo Finance,35,0,50,75,0,0,90,0,120,25
+Falcon Bank,0,95,0,45,60,0,0,70,165,45
+Gamma Credit,80,0,40,0,55,30,0,25,130,30
+Horizon Bank,25,50,0,65,0,40,75,0,155,38

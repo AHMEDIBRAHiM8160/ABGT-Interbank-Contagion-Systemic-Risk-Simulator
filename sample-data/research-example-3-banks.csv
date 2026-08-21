@@ -1,0 +1,4 @@
+Bank,Bank A,Bank B,Bank C,ExternalAssets,Lambda
+Bank A,0,10,20,50,0.2
+Bank B,5,0,10,40,0.2
+Bank C,15,5,0,30,0.2
