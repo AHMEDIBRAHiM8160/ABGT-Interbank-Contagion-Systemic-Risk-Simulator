@@ -198,8 +198,40 @@ README.md
 ```
 
 ---
+## 10. Tool Overview
+### -Contagion View
 
-## 10. Technology
+<img width="1600" height="900" alt="contagion part" src="https://github.com/user-attachments/assets/778f50a0-39f8-4dad-b4a6-bfcb3dad9e31" />
+
+### -Data upload View 
+
+<img width="1600" height="900" alt="Data upload view" src="https://github.com/user-attachments/assets/38679164-21df-43a3-bc8b-5b275eb98da0" />
+
+### -Simulation Setup View 
+
+<img width="1600" height="900" alt="simulation view" src="https://github.com/user-attachments/assets/0c55ac1e-9a81-416c-a0bc-757b0754c04c" />
+
+### -Simulation Output View
+
+<img width="1600" height="900" alt="simulation out put" src="https://github.com/user-attachments/assets/89f4fa82-5914-4e50-a7d4-e506202da7e8" />
+
+### -Simulation Result View
+
+<img width="1599" height="881" alt="result view" src="https://github.com/user-attachments/assets/da35acb5-4b45-4e03-af9e-36ed6ab57d36" />
+
+### -Simulation Comparison View
+
+<img width="1600" height="900" alt="model comparison view" src="https://github.com/user-attachments/assets/e5d32fef-c576-4f6e-9c24-29f15df15d2f" />
+
+### -Risk Analysis View
+
+<img width="1600" height="900" alt="risk analysis view" src="https://github.com/user-attachments/assets/d82f54a7-1568-4a60-8786-1fd4ba613a86" />
+
+### -Network View
+
+<img width="1600" height="900" alt="network" src="https://github.com/user-attachments/assets/5b32dd14-931d-44ea-ae27-0cc59eed879e" />
+
+## 11. Technology
 
 Vanilla HTML5, CSS3 (custom properties, light/dark themes, responsive grid) and
 ES5-compatible JavaScript — no build step, no backend, no framework. Browser libraries
